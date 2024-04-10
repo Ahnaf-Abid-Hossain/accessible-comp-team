@@ -24,11 +24,63 @@ function activate(context) {
 		vscode.window.showInformationMessage('Hello World from accessible-comp!');
 	});
 
-	context.subscriptions.push(disposable);
+	vscode.window.onDidChangeActiveTextEditor(onDidChangeActiveTextEditor);
+
+
+    // changes for live tracking code
+
+    
+	let disposable3 = vscode.commands.registerCommand('accessible-comp.trackCodeChanges', () => {
+        // Get the active text editor
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showInformationMessage('No active editor found.');
+            return;
+        }
+		const fileName = editor.document.fileName;
+        // Subscribe to changes in the text editor
+        const disposable2 = vscode.workspace.onDidChangeTextDocument(event => {
+            if (event.document === editor.document) {
+                const changes = event.contentChanges;
+                changes.forEach(change => {
+                    // Check if Enter key was pressed
+                    if (change.text.includes('\n')) {
+                        const line = editor.document.lineAt(change.range.start.line).text;
+                        console.log(`Code Change in ${fileName}:`);
+                        console.log(line);
+                    }
+                });
+            }
+        });
+
+        // Dispose the subscription when necessary
+        context.subscriptions.push(disposable2);
+    });
+
+
+
+	context.subscriptions.push(disposable3);
 }
 
 // This method is called when your extension is deactivated
 function deactivate() {}
+
+function onDidChangeActiveTextEditor(editor) {
+	console.log('Active Text Editor:', editor);
+    if (editor) {
+        const document = editor.document;
+
+        // Get the language identifier of the document
+        const languageId = document.languageId;
+
+        // Get the file extension of the document
+        const fileExtension = document.fileName.split('.').pop();
+
+        console.log('Language Identifier:', languageId);
+        console.log('File Extension:', fileExtension);
+    }
+}
+
 
 module.exports = {
 	activate,

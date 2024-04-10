@@ -15,7 +15,12 @@
     "commands": [{
       "command": "accessible-comp.helloWorld",
       "title": "Hello World"
-    }]
+    }
+  ,
+  {
+    "command": "accessible-comp.trackCodeChanges",
+    "title": "Track Code Changes"
+}]
   },
   "scripts": {
     "lint": "eslint .",
