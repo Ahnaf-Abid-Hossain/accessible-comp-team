@@ -29,7 +29,7 @@ function activate(context) {
 
     // changes for live tracking code
 
-    
+
 	let disposable3 = vscode.commands.registerCommand('accessible-comp.trackCodeChanges', () => {
         // Get the active text editor
         const editor = vscode.window.activeTextEditor;
@@ -37,10 +37,22 @@ function activate(context) {
             vscode.window.showInformationMessage('No active editor found.');
             return;
         }
+        //getting file name for the working file
 		const fileName = editor.document.fileName;
+        //creating deco object
+        const decorationType = vscode.window.createTextEditorDecorationType({
+            textDecoration: 'underline solid green'
+        });
+        const decorationTypeError = vscode.window.createTextEditorDecorationType({
+            textDecoration: 'underline solid red'
+        });
+
         // Subscribe to changes in the text editor
         const disposable2 = vscode.workspace.onDidChangeTextDocument(event => {
+            let decorations = [];
+            let decorations2 = []
             if (event.document === editor.document) {
+                //changes are the changes string
                 const changes = event.contentChanges;
                 changes.forEach(change => {
                     // Check if Enter key was pressed
@@ -48,13 +60,40 @@ function activate(context) {
                         const line = editor.document.lineAt(change.range.start.line).text;
                         console.log(`Code Change in ${fileName}:`);
                         console.log(line);
+                        if (line.includes("peep")){
+                            console.log("opop");
+                            const line = change.range.start.line;
+                            const startPosition = new vscode.Position(line, 0);
+                            const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
+                            const decoration = { range: new vscode.Range(startPosition, endPosition) };
+                            decorations.push(decoration);
+                        }
+                        if(line.includes("<img") && line.includes(">")){
+                            console.log("fill img tag");
+                            if(line.includes ("alt=")){
+                                console.log(" we good");
+
+                            }else{
+                                console.log("we bad");
+                                const line = change.range.start.line;
+                                const startPosition = new vscode.Position(line, 0);
+                                const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
+                                const decoration2 = { range: new vscode.Range(startPosition, endPosition) };
+                                decorations2.push(decoration2);
+                                
+                            }
+                        }
+        
                     }
+                    
                 });
+                editor.setDecorations(decorationType, decorations);
+                editor.setDecorations(decorationTypeError, decorations2);
             }
         });
 
         // Dispose the subscription when necessary
-        context.subscriptions.push(disposable2);
+        context.subscriptions.push(decorationType, disposable2);
     });
 
 
