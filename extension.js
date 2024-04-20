@@ -25,16 +25,35 @@ class MyHoverProvider {
     }
 }
 
+function checkHeadings(nums) {
+    let highestLevel = 0;
+    for (const num of nums) {
+        if (num === highestLevel + 1) {
+            highestLevel = num;
+        } else if (num <= highestLevel) {
+            continue;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
+function extractHeadingLevel(str) {
+    const match = str.match(/<h(\d+)/);
+    if (match && match[1]) {
+        return parseInt(match[1]);
+    } else {
+        return null; // No match found
+    }
+}
+
 function activate(context) {
     console.log('Congratulations, your extension "accessible-comp" is now active!');
+    let headingLevels = [];
 
     let disposable = vscode.commands.registerCommand('accessible-comp.helloWorld', function () {
         vscode.window.showInformationMessage('Hello World from accessible-comp!');
-    });
-
-    // Command to handle the "bruh" button click
-    let bruhDisposable = vscode.commands.registerCommand('accessible-comp.bruh', () => {
-        vscode.window.showInformationMessage('Bruh button clicked!');
     });
 
     vscode.window.onDidChangeActiveTextEditor(onDidChangeActiveTextEditor);
@@ -54,9 +73,10 @@ function activate(context) {
             textDecoration: 'underline solid red',
         });
 
+        let decorations = [];
+        let decorations2 = [];
+        
         const disposable2 = vscode.workspace.onDidChangeTextDocument(event => {
-            let decorations = [];
-            let decorations2 = [];
 
             if (event.document === editor.document) {
                 const changes = event.contentChanges;
@@ -69,6 +89,24 @@ function activate(context) {
                             const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
                             const decoration = { range: new vscode.Range(startPosition, endPosition) };
                             decorations.push(decoration);
+                        }
+                        if (line.includes("<h") && line.includes(">")) {
+                            let level = extractHeadingLevel(line);
+                            headingLevels.push(+level);
+                            if (!checkHeadings(headingLevels)) {
+                                const line = change.range.start.line;
+                                const startPosition = new vscode.Position(line, 0);
+                                const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
+                                const decoration3 = { range: new vscode.Range(startPosition, endPosition), hoverMessage: {
+                                    language: 'markdown',
+                                    value: `**Incorrect Heading Hiearchy**
+
+You are trying to add a H${level}, but ${headingLevels.slice(0,-1).length ? `your highest level is H${Math.max(...headingLevels.slice(0,-1))}` : "you don't even have an H1"}. You are missing heading levels between these two headings.
+
+An incorrect heading hiearchy makes it extremely difficult for screen readers. Please fix this.`
+                                } };
+                                decorations2.push(decoration3);
+                            }
                         }
                         if (line.includes("<img") && line.includes(">")) {
                             if (!line.includes("alt=")) {
@@ -88,9 +126,10 @@ Make sure to add descriptive alt text that conveys the meaning or function of th
                         }
                     }
                 });
-                editor.setDecorations(decorationType, decorations);
-                editor.setDecorations(decorationTypeError, decorations2);
             }
+            console.log(decorations2.length);
+            editor.setDecorations(decorationType, decorations);
+            editor.setDecorations(decorationTypeError, decorations2);
         });
 
         context.subscriptions.push(decorationType, disposable2);
@@ -104,7 +143,7 @@ Make sure to add descriptive alt text that conveys the meaning or function of th
         );
     });
 
-    context.subscriptions.push(disposable, disposable3, bruhDisposable);
+    context.subscriptions.push(disposable, disposable3);
 }
 
 function deactivate() {}
