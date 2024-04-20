@@ -8,6 +8,30 @@ const vscode = require('vscode');
 /**
  * @param {vscode.ExtensionContext} context
  */
+
+class MyHoverProvider {
+    // provideHover(document, position, token) {
+    //     // Check if the position is within your underline decoration range
+    //     // You might need to keep track of the decoration ranges when you create them
+    //     // Then, retrieve the relevant information for the hover message
+    //     const hoverMessage = "This is a hover message for your underline decoration";
+    //     return new vscode.Hover(hoverMessage);
+    // }
+    provideHover(document, position, token) {
+        console.log("here")
+        const wordRange = document.getWordRangeAtPosition(position);
+        if (!wordRange) {
+            return;
+        }
+        const word = document.getText(wordRange);
+        // Replace this logic with your specific check for the word "peep" or any other condition
+        if (word === "peep") {
+            return new vscode.Hover("This is a hover message for the word 'peep'");
+        }
+    }
+}
+
+const hoverProvider = new MyHoverProvider();
 function activate(context) {
 
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
@@ -54,6 +78,8 @@ function activate(context) {
             if (event.document === editor.document) {
                 //changes are the changes string
                 const changes = event.contentChanges;
+
+                
                 changes.forEach(change => {
                     // Check if Enter key was pressed
                     if (change.text.includes('\n')) {
@@ -66,6 +92,38 @@ function activate(context) {
                             const startPosition = new vscode.Position(line, 0);
                             const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
                             const decoration = { range: new vscode.Range(startPosition, endPosition) };
+                            // const hoverProvider = new MyHoverProvider();
+                            // context.subscriptions.push(vscode.languages.registerHoverProvider('star-rod-script', {
+                            //     provideHover(document, position, token) {
+                            //         console.log("ghjkghjkbghjk")
+                            //         const range = document.getWordRangeAtPosition(position);
+                            //         const word = document.getText(range);
+                        
+                            //         if (word == "HELLO") {
+                        
+                            //             return new vscode.Hover({
+                            //                 language: "Hello language",
+                            //                 value: "Hello Value"
+                            //             });
+                            //         }
+                            //     }
+                            // }));
+
+                            context.subscriptions.push(
+                                vscode.languages.registerHoverProvider(
+                                    { scheme: 'file' }, // Define the language(s) to provide hover support for
+                                    { 
+                                        provideHover(document, position, token) {
+                                            console.log("hep")
+                                            // Logic to provide hover information
+                                            const range = document.getWordRangeAtPosition(position);
+                                            const word = document.getText(range);
+                                            return new vscode.Hover(`Hovering over: ${word}`);
+                                        }
+                                    }
+                                )
+                            );
+
                             decorations.push(decoration);
                         }
                         if(line.includes("<img") && line.includes(">")){
