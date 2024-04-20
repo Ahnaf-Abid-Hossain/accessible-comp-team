@@ -74,8 +74,13 @@ function activate(context) {
             textDecoration: 'underline solid red',
         });
 
+        const decorationTypeWarning = vscode.window.createTextEditorDecorationType({
+            textDecoration: 'underline solid yellow',
+        });
+
         let decorations = [];
         let decorations2 = [];
+        let decorations3 = [];
         
         const disposable2 = vscode.workspace.onDidChangeTextDocument(event => {
 
@@ -144,12 +149,27 @@ Adding labels will make it easier for all users, including those who rely on scr
                                 decorations2.push(decoration2);
                             }
                         }
+                        if (line.includes("tabindex")) {
+                            const line = change.range.start.line;
+                            const startPosition = new vscode.Position(line, 0);
+                            const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
+                            const decoration3 = { range: new vscode.Range(startPosition, endPosition), hoverMessage: {
+                                language: 'markdown',
+                                value: `**Warning: Manually setting the tabindex may be problematic!**
+
+Manually setting a tabindex value can be problmeatic for keyboard users because it may cause issues with the default HTML document flow. 
+
+It is generally recommended to avoid using tabindex unless there's a very specific need to overide the default tab order.`
+                            } };
+                            decorations3.push(decoration3);
+                        }
                     }
                 });
             }
             console.log(decorations2.length);
             editor.setDecorations(decorationType, decorations);
             editor.setDecorations(decorationTypeError, decorations2);
+            editor.setDecorations(decorationTypeWarning, decorations3);
         });
 
         context.subscriptions.push(decorationType, disposable2);
