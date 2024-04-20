@@ -51,6 +51,7 @@ function extractHeadingLevel(str) {
 function activate(context) {
     console.log('Congratulations, your extension "accessible-comp" is now active!');
     let headingLevels = [];
+    let hasInputLabel = false;
 
     let disposable = vscode.commands.registerCommand('accessible-comp.helloWorld', function () {
         vscode.window.showInformationMessage('Hello World from accessible-comp!');
@@ -90,6 +91,9 @@ function activate(context) {
                             const decoration = { range: new vscode.Range(startPosition, endPosition) };
                             decorations.push(decoration);
                         }
+                        if (line.includes("<label") && line.includes(">")) {
+                            hasInputLabel = true;
+                        }
                         if (line.includes("<h") && line.includes(">")) {
                             let level = extractHeadingLevel(line);
                             headingLevels.push(+level);
@@ -120,6 +124,22 @@ An incorrect heading hiearchy makes it extremely difficult for screen readers. P
 Adding alt text to images is crucial for web accessibility. Alt text provides a textual description of the image content, making it accessible to people who use screen readers or have images disabled in their browsers. Without alt text, users with disabilities may not be able to understand the purpose or content of the image.
 
 Make sure to add descriptive alt text that conveys the meaning or function of the image to ensure your website is accessible to all users.`
+                                } };
+                                decorations2.push(decoration2);
+                            }
+                        }
+                        if (line.includes("<input") && line.includes(">")) {
+                            if (!hasInputLabel) {
+                                const line = change.range.start.line;
+                                const startPosition = new vscode.Position(line, 0);
+                                const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
+                                const decoration2 = { range: new vscode.Range(startPosition, endPosition), hoverMessage: {
+                                    language: 'markdown',
+                                    value: `**Missing Form Input Label!**
+
+Adding form input labels is crucial for web accessibility. Input labels provides a textual description of the input, making it accessible to people who use screen readers. Without them, users with disabilities may not be able to understand the purpose or content of the input.
+
+Adding labels will make it easier for all users, including those who rely on screen readers, to understand the form`
                                 } };
                                 decorations2.push(decoration2);
                             }
