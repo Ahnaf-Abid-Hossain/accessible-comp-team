@@ -163,6 +163,22 @@ It is generally recommended to avoid using tabindex unless there's a very specif
                             } };
                             decorations3.push(decoration3);
                         }
+                        if (line.includes("<button>") || line.includes("<a") || line.includes("<nav")) {
+                            if (!line.includes("role=")) {
+                                const line = change.range.start.line;
+                                const startPosition = new vscode.Position(line, 0);
+                                const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
+                                const decoration2 = { range: new vscode.Range(startPosition, endPosition), hoverMessage: {
+                                    language: 'markdown',
+                                    value: `**Missing role attribute for corresponding element!**
+
+ARIA (Accessible Rich Internet Applications) is used to enhance the accessibility of web content by providing additional semantics and context for assistive technologies like screen readers. 
+
+Adding ARIA roles and attributes helps ensure that users with disabilities can navigate and interact with web pages more effectively.`
+                                } };
+                                decorations2.push(decoration2);
+                            }
+                        }
                     }
                 });
             }
