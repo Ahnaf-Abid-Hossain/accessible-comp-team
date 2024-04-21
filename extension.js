@@ -81,14 +81,74 @@ function activate(context) {
         let decorations = [];
         let decorations2 = [];
         let decorations3 = [];
-        
-        const disposable2 = vscode.workspace.onDidChangeTextDocument(event => {
+        let errorList = [];
 
+        function removeDecorationByLineNumber(lineNumberToRemove, decorationsList) {
+            // Filter out decorations with the specified line number
+            decorationsList.filter(decoration => decoration.range.start.line !== lineNumberToRemove);
+        }
+
+        const disposable2 = vscode.workspace.onDidChangeTextDocument(event => {
+           
             if (event.document === editor.document) {
+
                 const changes = event.contentChanges;
+
                 changes.forEach(change => {
                     if (change.text.includes('\n')) {
+                        
                         const line = editor.document.lineAt(change.range.start.line).text;
+                        line2 = change.range.start.line
+                        console.log("print start: ",decorations2)
+                        for (const error of errorList) {
+                            // console.log("test")
+                            // console.log(error)
+                            // console.log("line ",line2)
+                            // console.log("error mark ",error[0])
+                            // console.log("dec:",decorations2)
+                            if (error[0] === line2) {
+                                // return error; // Return the error object if the line number matches the target
+                                errortype = error[1]
+                                // console.log("here")
+                                if (errortype === "img"){
+                                    console.log("here2")
+                                    if (line.includes("alt=")) {
+                                        // decorations2 = [];
+                                        console.log("jjj")
+                                        for (const dec in decorations2){
+                                            console.log('looking for line: ',line2)
+                                            console.log("error lines: ", decorations2[dec].range.c.c)
+                                            if(decorations2[dec].range.c.c === line2){
+                                                console.log("foindes")
+                                                console.log("before ",decorations2)
+                                                decorations2.splice(dec,1);
+                                                console.log("after",decorations2)
+                                                // break;
+                                            }
+                                            // else{
+                                            //     console.log("opdss")
+                                            //     decorations2[dec].range.c.c = decorations2[dec].range.c.c+1
+                                            // }
+                                        }
+                                        // for (const dec in decorations2){
+                                        //     console.log("hs")
+                                        //     console.log("djskds",decorations2[dec].range.c.c.m)
+                                        //     console.log("e value", decorations2[dec].range.c.e)
+                                        //     decorations2[dec].range.c.c = decorations2[dec].range.c.c+1
+                                        //     console.log("djskds2",decorations2[dec].range.c.c.m)
+                                        //     console.log("e value", decorations2[dec].range.c.e)
+                                            
+                                        // }
+                                        // decorations2 = removeDecorationByLineNumber(decorations2,line2)
+                                        editor.setDecorations(decorationTypeError,decorations2);
+                                        
+                                    }
+                                }
+                                // else if(errortype === "nav"){
+
+                                // }
+                            }
+                        }
                         if (line.includes("peep")) {
                             const line = change.range.start.line;
                             const startPosition = new vscode.Position(line, 0);
@@ -120,6 +180,8 @@ An incorrect heading hiearchy makes it extremely difficult for screen readers. P
                         if (line.includes("<img") && line.includes(">")) {
                             if (!line.includes("alt=")) {
                                 const line = change.range.start.line;
+                                console.log("co: ", line)
+                                errorList.push([line , "img"]);
                                 const startPosition = new vscode.Position(line, 0);
                                 const endPosition = new vscode.Position(line, editor.document.lineAt(line).text.length);
                                 const decoration2 = { range: new vscode.Range(startPosition, endPosition), hoverMessage: {
